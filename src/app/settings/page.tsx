@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { AppShell } from "@/components/app-shell/AppShell";
+import { HouseholdSettingsPanel } from "@/components/household/HouseholdSettingsPanel";
 import { InvitePartnerCard } from "@/components/household/InvitePartnerCard";
 
 export const metadata: Metadata = {
@@ -10,6 +11,7 @@ export default function SettingsPage() {
   return (
     <AppShell eyebrow="Семья" title="Настройки">
       <div className="grid gap-3">
+        <HouseholdSettingsPanel />
         <InvitePartnerCard />
         <section className="ios-panel scroll-fade-in p-4">
           <h2 className="text-lg font-semibold">Правило расчета</h2>

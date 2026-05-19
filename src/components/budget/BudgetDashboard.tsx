@@ -1,60 +1,35 @@
 "use client";
 
-import { useMemo, useState } from "react";
-import {
-  buildBudgetProjection,
-  defaultBudgetDraft,
-} from "@/application/budget/budgetProjection";
+import { ArrowCounterClockwise } from "@phosphor-icons/react";
+import { useMemo } from "react";
+import { buildBudgetProjection } from "@/application/budget/budgetProjection";
 import { formatMoney } from "@/application/budget/formatters";
-import { AmountInput } from "@/design-system/AmountInput";
 import { ProgressRing } from "@/design-system/ProgressRing";
-import type { MemberBudgetInput, MemberId } from "@/domain/budget/budgetTypes";
+import { useBudgetStore } from "@/stores/useBudgetStore";
 import { AllocationList } from "./AllocationList";
 import { CashflowAlertList } from "./CashflowAlertList";
 import { CoefficientCard } from "./CoefficientCard";
-
-type MoneyField = "income" | "personalMandatory";
-
-const updateMemberField = (
-  members: MemberBudgetInput[],
-  memberId: MemberId,
-  field: MoneyField,
-  value: number,
-) =>
-  members.map((member) =>
-    member.id === memberId ? { ...member, [field]: value } : member,
-  );
+import { IncomePlanner } from "./IncomePlanner";
+import { MandatoryPaymentsPanel } from "./MandatoryPaymentsPanel";
+import { QuickExpenseForm } from "./QuickExpenseForm";
 
 export const BudgetDashboard = () => {
-  const [draft, setDraft] = useState(defaultBudgetDraft);
-  const projection = useMemo(() => buildBudgetProjection(draft), [draft]);
+  const plannerState = useBudgetStore();
+  const projection = useMemo(
+    () => buildBudgetProjection(plannerState),
+    [plannerState],
+  );
   const disposableTotal = projection.coefficients.reduce(
-    (sum, coefficient) => sum + coefficient.disposableIncome,
+    (total, coefficient) => total + coefficient.disposableIncome,
     0,
   );
-  const mandatoryTotal = draft.sharedMandatory.reduce(
-    (sum, payment) => sum + payment.amount,
-    0,
-  );
-  const plannedGoals = draft.goals.reduce(
-    (sum, goal) => sum + goal.monthlyTarget,
-    0,
-  );
-  const committedTotal = mandatoryTotal + plannedGoals;
+  const plannedSharedTotal =
+    projection.mandatorySharedTotal +
+    projection.funds.reduce((total, fund) => total + fund.monthlyLimit, 0) +
+    projection.goals.reduce((total, goal) => total + goal.monthlyTarget, 0);
   const freedomScore = disposableTotal
-    ? Math.max(0, 1 - committedTotal / disposableTotal)
+    ? Math.max(0, 1 - plannedSharedTotal / disposableTotal)
     : 0;
-
-  const setMemberValue = (
-    memberId: MemberId,
-    field: MoneyField,
-    value: number,
-  ) => {
-    setDraft((currentDraft) => ({
-      ...currentDraft,
-      members: updateMemberField(currentDraft.members, memberId, field, value),
-    }));
-  };
 
   return (
     <div className="grid gap-5">
@@ -66,48 +41,64 @@ export const BudgetDashboard = () => {
               {formatMoney(disposableTotal)}
             </h2>
             <p className="mt-2 text-sm text-slate-500">
-              доступно после личных обязательств
+              остаток после личных обязательных платежей
             </p>
           </div>
           <ProgressRing
             accent="#111827"
-            label="свободно"
+            label="резерв"
             progress={freedomScore}
             value={`${Math.round(freedomScore * 100)}%`}
           />
         </div>
+        <div className="mt-4 grid grid-cols-2 gap-2">
+          <div className="rounded-[8px] bg-slate-100/80 p-3">
+            <p className="text-sm text-slate-500">Доходы</p>
+            <p className="mt-1 text-xl font-semibold">
+              {formatMoney(projection.incomeTotal)}
+            </p>
+          </div>
+          <div className="rounded-[8px] bg-slate-100/80 p-3">
+            <p className="text-sm text-slate-500">Факт трат</p>
+            <p className="mt-1 text-xl font-semibold">
+              {formatMoney(projection.transactionsTotal)}
+            </p>
+          </div>
+          <div className="rounded-[8px] bg-slate-100/80 p-3">
+            <p className="text-sm text-slate-500">Личные обяз.</p>
+            <p className="mt-1 text-xl font-semibold">
+              {formatMoney(projection.mandatoryPersonalTotal)}
+            </p>
+          </div>
+          <div className="rounded-[8px] bg-slate-100/80 p-3">
+            <p className="text-sm text-slate-500">Общие обяз.</p>
+            <p className="mt-1 text-xl font-semibold">
+              {formatMoney(projection.mandatorySharedTotal)}
+            </p>
+          </div>
+        </div>
+        <button
+          className="mt-4 flex h-10 items-center justify-center gap-2 rounded-full bg-slate-100 px-4 text-sm font-semibold text-slate-500 premium-motion active:scale-[0.98]"
+          onClick={plannerState.resetDemoData}
+          type="button"
+        >
+          <ArrowCounterClockwise size={18} weight="light" />
+          Сбросить демо-данные
+        </button>
       </section>
 
-      <div className="grid gap-3">
-        {draft.members.map((member) => (
-          <div className="grid gap-3" key={member.id}>
-            <AmountInput
-              accent={member.id === "primary" ? "#111827" : "#2563eb"}
-              label={`${member.name}: доход за месяц`}
-              onChange={(value) => setMemberValue(member.id, "income", value)}
-              value={member.income}
-            />
-            <AmountInput
-              accent={member.id === "primary" ? "#64748b" : "#0f766e"}
-              label={`${member.name}: личные платежи`}
-              onChange={(value) =>
-                setMemberValue(member.id, "personalMandatory", value)
-              }
-              value={member.personalMandatory}
-            />
-          </div>
-        ))}
-      </div>
-
+      <IncomePlanner />
+      <QuickExpenseForm />
+      <MandatoryPaymentsPanel />
       <CoefficientCard coefficients={projection.coefficients} />
       <CashflowAlertList requirements={projection.reserveRequirements} />
       <AllocationList
         allocations={projection.fundAllocations}
-        title="Фонды по коэффициенту"
+        title="План фондов по коэффициенту"
       />
       <AllocationList
         allocations={projection.goalAllocations}
-        title="Цели накопления"
+        title="План накоплений по коэффициенту"
       />
     </div>
   );

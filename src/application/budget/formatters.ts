@@ -18,3 +18,9 @@ export const formatDateTime = (value: string) =>
     minute: "2-digit",
     month: "long",
   }).format(new Date(value));
+
+export const formatTime = (value: string) =>
+  new Intl.DateTimeFormat("ru-RU", {
+    hour: "2-digit",
+    minute: "2-digit",
+  }).format(new Date(value));
