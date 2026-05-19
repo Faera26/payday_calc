@@ -11,6 +11,17 @@ export type BudgetMember = {
   name: string;
 };
 
+export type IncomeSchedule = {
+  id: string;
+  memberId: MemberId;
+  title: string;
+  kind: Exclude<IncomeKind, "extra">;
+  amount: number;
+  dayOfMonth: number;
+  time: string;
+  moveWeekendToFriday: boolean;
+};
+
 export type IncomeEventPlan = {
   id: string;
   memberId: MemberId;
@@ -45,7 +56,9 @@ export type EditableBudgetFund = {
   id: string;
   title: string;
   monthlyLimit: number;
+  allocationWeight: number;
   accent: string;
+  iconKey: string;
 };
 
 export type EditableSavingGoal = {
@@ -62,8 +75,10 @@ export type BudgetPlannerState = {
   funds: EditableBudgetFund[];
   goals: EditableSavingGoal[];
   incomeEvents: IncomeEventPlan[];
+  incomeSchedules: IncomeSchedule[];
   mandatoryPayments: MandatoryPaymentPlan[];
   members: BudgetMember[];
+  planningMonth: string;
   transactions: ExpenseTransaction[];
 };
 

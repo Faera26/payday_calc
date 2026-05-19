@@ -11,7 +11,7 @@ type FieldShellProps = {
 };
 
 const FieldShell = ({ children, label }: FieldShellProps) => (
-  <label className="grid gap-1">
+  <label className="grid min-w-0 gap-1">
     <span className="text-sm font-medium text-slate-500">{label}</span>
     {children}
   </label>
@@ -24,7 +24,7 @@ type TextFieldProps = InputHTMLAttributes<HTMLInputElement> & {
 export const TextField = ({ label, ...props }: TextFieldProps) => (
   <FieldShell label={label}>
     <input
-      className="h-12 rounded-[8px] border border-slate-200 bg-white px-3 text-base text-slate-950 outline-none premium-motion focus:border-slate-950"
+      className="h-12 w-full min-w-0 rounded-[8px] border border-slate-200 bg-white px-3 text-base text-slate-950 outline-none premium-motion focus:border-slate-950"
       {...props}
     />
   </FieldShell>
@@ -47,7 +47,7 @@ export const MoneyField = ({
 }: MoneyFieldProps) => (
   <FieldShell label={label}>
     <input
-      className="h-12 rounded-[8px] border border-slate-200 bg-white px-3 text-base font-semibold text-slate-950 outline-none premium-motion focus:border-slate-950"
+      className="h-12 w-full min-w-0 rounded-[8px] border border-slate-200 bg-white px-3 text-base font-semibold text-slate-950 outline-none premium-motion focus:border-slate-950"
       inputMode="numeric"
       min={0}
       onChange={(event) => onValueChange(Number(event.target.value || 0))}
@@ -65,7 +65,7 @@ type SelectFieldProps = SelectHTMLAttributes<HTMLSelectElement> & {
 export const SelectField = ({ children, label, ...props }: SelectFieldProps) => (
   <FieldShell label={label}>
     <select
-      className="h-12 rounded-[8px] border border-slate-200 bg-white px-3 text-base text-slate-950 outline-none premium-motion focus:border-slate-950"
+      className="h-12 w-full min-w-0 rounded-[8px] border border-slate-200 bg-white px-3 text-base text-slate-950 outline-none premium-motion focus:border-slate-950"
       {...props}
     >
       {children}

@@ -18,10 +18,25 @@ import type {
 import type { CashflowEvent } from "@/domain/cashflow/cashflowTypes";
 import { buildCashflowTimeline } from "@/domain/cashflow/buildCashflowTimeline";
 import { calculateReserveRequirements } from "@/domain/cashflow/calculateReserveRequirements";
-import { getDateKey } from "./dateTime";
+import {
+  countInclusiveDays,
+  currentPlanningMonth,
+  getDateKey,
+  getDaysInMonth,
+  getMonthEndDateTime,
+  getMonthlyDateKey,
+  moveWeekendDateToFriday,
+  toMoscowDateTime,
+  todayDateKey,
+} from "./dateTime";
 
 export type FundProgress = EditableBudgetFund & {
-  remaining: number;
+  dailyRecommendedLimit: number;
+  expectedSpendToToday: number;
+  manualRemaining: number;
+  overspentBy: number;
+  recommendedMonthlyLimit: number;
+  recommendedRemaining: number;
   spent: number;
 };
 
@@ -30,16 +45,33 @@ export type GoalProgress = EditableSavingGoal & {
   progress: number;
 };
 
+export type PaydayWindow = {
+  availableForFunds: number;
+  dailyAvailable: number;
+  endsAt: string;
+  goalContribution: number;
+  id: string;
+  income: number;
+  mandatory: number;
+  startsAt: string;
+  title: string;
+};
+
 export type BudgetProjection = {
   coefficients: ReturnType<typeof calculateParticipationCoefficients>;
+  disposableTotal: number;
+  flexiblePool: number;
   fundAllocations: SharedAllocation[];
   funds: FundProgress[];
+  generatedIncomeEvents: IncomeEventPlan[];
   goalAllocations: SharedAllocation[];
+  goalMonthlyTotal: number;
   goals: GoalProgress[];
   incomeTotal: number;
   mandatoryPersonalTotal: number;
   mandatorySharedTotal: number;
   memberInputs: MemberBudgetInput[];
+  paydayWindows: PaydayWindow[];
   reserveRequirements: ReturnType<typeof calculateReserveRequirements>;
   timeline: ReturnType<typeof buildCashflowTimeline>;
   transactionsTotal: number;
@@ -48,13 +80,46 @@ export type BudgetProjection = {
 const sum = <T>(items: T[], selector: (item: T) => number) =>
   items.reduce((total, item) => total + selector(item), 0);
 
+const getStateMonth = (state: BudgetPlannerState) =>
+  state.planningMonth || currentPlanningMonth();
+
 const getMemberName = (state: BudgetPlannerState, memberId: string) =>
   state.members.find((member) => member.id === memberId)?.name ?? "Участник";
 
-const buildMemberInputs = (state: BudgetPlannerState): MemberBudgetInput[] =>
+export const buildScheduledIncomeEvents = (
+  state: BudgetPlannerState,
+): IncomeEventPlan[] => {
+  const month = getStateMonth(state);
+
+  return (state.incomeSchedules ?? []).map((schedule) => {
+    const baseDate = getMonthlyDateKey(month, schedule.dayOfMonth);
+    const paidDate = schedule.moveWeekendToFriday
+      ? moveWeekendDateToFriday(baseDate)
+      : baseDate;
+
+    return {
+      amount: schedule.amount,
+      id: `scheduled-${schedule.id}-${month}`,
+      kind: schedule.kind,
+      memberId: schedule.memberId,
+      occurredAt: toMoscowDateTime(paidDate, schedule.time),
+      title: schedule.title,
+    };
+  });
+};
+
+const getAllIncomeEvents = (state: BudgetPlannerState) => [
+  ...buildScheduledIncomeEvents(state),
+  ...(state.incomeEvents ?? []),
+];
+
+const buildMemberInputs = (
+  state: BudgetPlannerState,
+  incomeEvents: IncomeEventPlan[],
+): MemberBudgetInput[] =>
   state.members.map((member) => {
     const income = sum(
-      state.incomeEvents.filter((event) => event.memberId === member.id),
+      incomeEvents.filter((event) => event.memberId === member.id),
       (event) => event.amount,
     );
     const personalMandatory = sum(
@@ -141,10 +206,123 @@ const transactionToCashflowEvent = (
   title: getTransactionTitle(transaction, state),
 });
 
+const getFundWeightTotal = (funds: EditableBudgetFund[]) =>
+  Math.max(1, sum(funds, (fund) => Math.max(0, fund.allocationWeight ?? 1)));
+
+const getDayOfMonth = (dateKey: string) => Number(dateKey.slice(8, 10));
+
+const buildFunds = (
+  state: BudgetPlannerState,
+  flexiblePool: number,
+): FundProgress[] => {
+  const weightTotal = getFundWeightTotal(state.funds);
+  const month = getStateMonth(state);
+  const daysInMonth = getDaysInMonth(month);
+  const today = todayDateKey();
+  const todayInPlanningMonth = today.startsWith(month)
+    ? getDayOfMonth(today)
+    : Math.min(getDayOfMonth(getMonthlyDateKey(month, daysInMonth)), daysInMonth);
+  const remainingDays = Math.max(1, daysInMonth - todayInPlanningMonth + 1);
+
+  return state.funds.map((fund) => {
+    const spent = sum(
+      state.transactions.filter(
+        (transaction) =>
+          transaction.kind === "fund" && transaction.categoryId === fund.id,
+      ),
+      (transaction) => transaction.amount,
+    );
+    const recommendedMonthlyLimit =
+      (flexiblePool * Math.max(0, fund.allocationWeight ?? 1)) / weightTotal;
+    const expectedSpendToToday =
+      (recommendedMonthlyLimit / daysInMonth) * todayInPlanningMonth;
+    const recommendedRemaining = Math.max(0, recommendedMonthlyLimit - spent);
+
+    return {
+      ...fund,
+      dailyRecommendedLimit: recommendedRemaining / remainingDays,
+      expectedSpendToToday,
+      manualRemaining: Math.max(0, fund.monthlyLimit - spent),
+      overspentBy: Math.max(0, spent - expectedSpendToToday),
+      recommendedMonthlyLimit,
+      recommendedRemaining,
+      spent,
+    };
+  });
+};
+
+const buildPaydayWindows = (
+  state: BudgetPlannerState,
+  incomeEvents: IncomeEventPlan[],
+  goalMonthlyTotal: number,
+): PaydayWindow[] => {
+  const month = getStateMonth(state);
+  const monthEnd = getMonthEndDateTime(month);
+  const groups = Array.from(
+    incomeEvents.reduce((map, event) => {
+      const dateKey = getDateKey(event.occurredAt);
+      const current = map.get(dateKey) ?? [];
+      map.set(dateKey, [...current, event]);
+      return map;
+    }, new Map<string, IncomeEventPlan[]>()),
+  )
+    .map(([dateKey, events]) => ({
+      dateKey,
+      events,
+      income: sum(events, (event) => event.amount),
+      startsAt: toMoscowDateTime(dateKey, "00:00"),
+    }))
+    .sort(
+      (left, right) =>
+        new Date(left.startsAt).getTime() - new Date(right.startsAt).getTime(),
+    );
+  const incomeTotal = Math.max(1, sum(incomeEvents, (event) => event.amount));
+
+  return groups.map((group, index) => {
+    const next = groups[index + 1];
+    const endsAt = next
+      ? toMoscowDateTime(next.dateKey, "00:00")
+      : monthEnd;
+    const mandatory = sum(
+      state.mandatoryPayments.filter((payment) => {
+        const due = new Date(payment.dueAt).getTime();
+        return (
+          due >= new Date(group.startsAt).getTime() &&
+          due < new Date(endsAt).getTime()
+        );
+      }),
+      (payment) => payment.amount,
+    );
+    const goalContribution = goalMonthlyTotal * (group.income / incomeTotal);
+    const availableForFunds = Math.max(
+      0,
+      group.income - mandatory - goalContribution,
+    );
+    const inclusiveEndsAt = next
+      ? toMoscowDateTime(next.dateKey, "00:00")
+      : monthEnd;
+    const days = countInclusiveDays(group.startsAt, inclusiveEndsAt);
+
+    return {
+      availableForFunds,
+      dailyAvailable: availableForFunds / days,
+      endsAt,
+      goalContribution,
+      id: group.dateKey,
+      income: group.income,
+      mandatory,
+      startsAt: group.startsAt,
+      title: `${group.dateKey.slice(8, 10)}.${group.dateKey.slice(5, 7)}`,
+    };
+  });
+};
+
 export const buildBudgetProjection = (
   state: BudgetPlannerState,
 ): BudgetProjection => {
-  const memberInputs = buildMemberInputs(state);
+  const generatedIncomeEvents = buildScheduledIncomeEvents(state);
+  const incomeEvents = getAllIncomeEvents(state);
+  const memberInputs = buildMemberInputs(state, incomeEvents);
   const coefficients = calculateParticipationCoefficients(memberInputs);
   const mandatorySharedTotal = sum(
     state.mandatoryPayments.filter((payment) => payment.scope === "shared"),
@@ -154,34 +332,32 @@ export const buildBudgetProjection = (
     state.mandatoryPayments.filter((payment) => payment.scope === "personal"),
     (payment) => payment.amount,
   );
-  const fundAllocations = state.funds.map((fund) =>
-    allocateSharedAmount(fund.title, fund.monthlyLimit, coefficients),
+  const disposableTotal = sum(memberInputs, (member) =>
+    Math.max(0, member.income - member.personalMandatory),
+  );
+  const goalMonthlyTotal = sum(state.goals, (goal) => goal.monthlyTarget);
+  const flexiblePool = Math.max(
+    0,
+    disposableTotal - mandatorySharedTotal - goalMonthlyTotal,
+  );
+  const funds = buildFunds(state, flexiblePool);
+  const fundAllocations = funds.map((fund) =>
+    allocateSharedAmount(
+      fund.title,
+      fund.recommendedMonthlyLimit,
+      coefficients,
+    ),
   );
   const goalAllocations = state.goals.map((goal) =>
     allocateSharedAmount(goal.title, goal.monthlyTarget, coefficients),
   );
-  const funds = state.funds.map((fund) => {
-    const spent = sum(
-      state.transactions.filter(
-        (transaction) =>
-          transaction.kind === "fund" && transaction.categoryId === fund.id,
-      ),
-      (transaction) => transaction.amount,
-    );
-
-    return {
-      ...fund,
-      remaining: Math.max(0, fund.monthlyLimit - spent),
-      spent,
-    };
-  });
   const goals = state.goals.map((goal) => ({
     ...goal,
     progress: goal.targetAmount ? goal.currentAmount / goal.targetAmount : 0,
     remaining: Math.max(0, goal.targetAmount - goal.currentAmount),
   }));
   const cashflowEvents = [
-    ...state.incomeEvents.map(incomeToCashflowEvent),
+    ...incomeEvents.map(incomeToCashflowEvent),
     ...state.mandatoryPayments.map((payment) =>
       mandatoryToCashflowEvent(payment, coefficients),
     ),
@@ -197,14 +373,19 @@ export const buildBudgetProjection = (
 
   return {
     coefficients,
+    disposableTotal,
+    flexiblePool,
     fundAllocations,
     funds,
+    generatedIncomeEvents,
     goalAllocations,
+    goalMonthlyTotal,
     goals,
-    incomeTotal: sum(state.incomeEvents, (event) => event.amount),
+    incomeTotal: sum(incomeEvents, (event) => event.amount),
     mandatoryPersonalTotal,
     mandatorySharedTotal,
     memberInputs,
+    paydayWindows: buildPaydayWindows(state, incomeEvents, goalMonthlyTotal),
     reserveRequirements,
     timeline,
     transactionsTotal: sum(state.transactions, (event) => event.amount),
@@ -214,7 +395,7 @@ export const buildBudgetProjection = (
 export const buildCalendarEvents = (
   state: BudgetPlannerState,
 ): CalendarEvent[] => [
-  ...state.incomeEvents.map((event) => ({
+  ...getAllIncomeEvents(state).map((event) => ({
     amount: event.amount,
     direction: "income" as const,
     id: event.id,

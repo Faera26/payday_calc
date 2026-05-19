@@ -76,7 +76,7 @@ export const MandatoryPaymentsPanel = () => {
                 </p>
               </div>
             </div>
-            <div className="grid grid-cols-2 gap-2">
+            <div className="grid grid-cols-[repeat(2,minmax(0,1fr))] gap-2">
               <MoneyField
                 label="Сумма"
                 onValueChange={(value) =>
@@ -171,7 +171,7 @@ export const MandatoryPaymentsPanel = () => {
           <Plus size={18} weight="light" />
           <p className="font-semibold">Добавить обязательный платеж</p>
         </div>
-        <div className="grid grid-cols-2 gap-2">
+        <div className="grid grid-cols-[repeat(2,minmax(0,1fr))] gap-2">
           <TextField
             label="Название"
             onChange={(event) => setTitle(event.target.value)}

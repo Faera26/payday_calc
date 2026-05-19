@@ -68,7 +68,7 @@ export const GoalsOverview = () => {
               }}
             />
           </div>
-          <div className="mt-4 grid grid-cols-2 gap-2">
+          <div className="mt-4 grid grid-cols-[repeat(2,minmax(0,1fr))] gap-2">
             <MoneyField
               label="Уже накоплено"
               onValueChange={(value) =>
@@ -107,7 +107,7 @@ export const GoalsOverview = () => {
           <Plus size={18} weight="light" />
           <h2 className="text-lg font-semibold">Новая цель</h2>
         </div>
-        <div className="grid grid-cols-2 gap-2">
+        <div className="grid grid-cols-[repeat(2,minmax(0,1fr))] gap-2">
           <TextField
             label="Название"
             onChange={(event) => setTitle(event.target.value)}

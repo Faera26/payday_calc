@@ -71,7 +71,7 @@ export const CashflowTimeline = () => {
       </section>
 
       <section className="ios-panel scroll-fade-in p-4">
-        <div className="grid grid-cols-3 gap-2">
+        <div className="grid grid-cols-[repeat(3,minmax(0,1fr))] gap-2">
           <div className="rounded-[8px] bg-emerald-50 p-3">
             <p className="text-sm text-emerald-700">Пришло</p>
             <p className="mt-1 text-lg font-semibold text-emerald-950">

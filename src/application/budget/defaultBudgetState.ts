@@ -1,18 +1,21 @@
 import type { BudgetPlannerState } from "@/domain/budget/plannerTypes";
 
 export const defaultBudgetState: BudgetPlannerState = {
+  planningMonth: "2026-05",
   members: [
     { id: "primary", name: "Илья" },
     { id: "partner", name: "Супруга" },
   ],
-  incomeEvents: [
+  incomeSchedules: [
     {
       id: "primary-advance",
       memberId: "primary",
       title: "Аванс Ильи",
       kind: "advance",
       amount: 95_000,
-      occurredAt: "2026-05-05T15:00:00+03:00",
+      dayOfMonth: 25,
+      time: "15:00",
+      moveWeekendToFriday: true,
     },
     {
       id: "primary-salary",
@@ -20,7 +23,9 @@ export const defaultBudgetState: BudgetPlannerState = {
       title: "Зарплата Ильи",
       kind: "salary",
       amount: 170_000,
-      occurredAt: "2026-05-15T15:00:00+03:00",
+      dayOfMonth: 10,
+      time: "15:00",
+      moveWeekendToFriday: true,
     },
     {
       id: "partner-advance",
@@ -28,7 +33,9 @@ export const defaultBudgetState: BudgetPlannerState = {
       title: "Аванс супруги",
       kind: "advance",
       amount: 62_000,
-      occurredAt: "2026-05-05T15:00:00+03:00",
+      dayOfMonth: 25,
+      time: "15:00",
+      moveWeekendToFriday: true,
     },
     {
       id: "partner-salary",
@@ -36,9 +43,12 @@ export const defaultBudgetState: BudgetPlannerState = {
       title: "Зарплата супруги",
       kind: "salary",
       amount: 93_000,
-      occurredAt: "2026-05-15T15:00:00+03:00",
+      dayOfMonth: 10,
+      time: "15:00",
+      moveWeekendToFriday: true,
     },
   ],
+  incomeEvents: [],
   mandatoryPayments: [
     {
       id: "mortgage",
@@ -80,19 +90,25 @@ export const defaultBudgetState: BudgetPlannerState = {
       id: "groceries",
       title: "Продукты",
       monthlyLimit: 78_000,
+      allocationWeight: 5,
       accent: "#111827",
+      iconKey: "cart",
     },
     {
       id: "car",
       title: "Авто",
       monthlyLimit: 34_000,
+      allocationWeight: 2,
       accent: "#2563eb",
+      iconKey: "car",
     },
     {
       id: "leisure",
       title: "Выходные",
       monthlyLimit: 28_000,
+      allocationWeight: 2,
       accent: "#c2410c",
+      iconKey: "game",
     },
   ],
   goals: [

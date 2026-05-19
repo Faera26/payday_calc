@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
 import { AppShell } from "@/components/app-shell/AppShell";
+import { IncomePlanner } from "@/components/budget/IncomePlanner";
+import { MandatoryPaymentsPanel } from "@/components/budget/MandatoryPaymentsPanel";
 import { HouseholdSettingsPanel } from "@/components/household/HouseholdSettingsPanel";
 import { InvitePartnerCard } from "@/components/household/InvitePartnerCard";
 
@@ -12,6 +14,8 @@ export default function SettingsPage() {
     <AppShell eyebrow="Семья" title="Настройки">
       <div className="grid gap-3">
         <HouseholdSettingsPanel />
+        <IncomePlanner />
+        <MandatoryPaymentsPanel />
         <InvitePartnerCard />
         <section className="ios-panel scroll-fade-in p-4">
           <h2 className="text-lg font-semibold">Правило расчета</h2>

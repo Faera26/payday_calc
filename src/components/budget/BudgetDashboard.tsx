@@ -3,14 +3,16 @@
 import { ArrowCounterClockwise } from "@phosphor-icons/react";
 import { useMemo } from "react";
 import { buildBudgetProjection } from "@/application/budget/budgetProjection";
-import { formatMoney } from "@/application/budget/formatters";
+import {
+  formatMoney,
+  formatMonthLabel,
+} from "@/application/budget/formatters";
 import { ProgressRing } from "@/design-system/ProgressRing";
 import { useBudgetStore } from "@/stores/useBudgetStore";
 import { AllocationList } from "./AllocationList";
 import { CashflowAlertList } from "./CashflowAlertList";
 import { CoefficientCard } from "./CoefficientCard";
-import { IncomePlanner } from "./IncomePlanner";
-import { MandatoryPaymentsPanel } from "./MandatoryPaymentsPanel";
+import { BudgetRecommendationPanel } from "./BudgetRecommendationPanel";
 import { QuickExpenseForm } from "./QuickExpenseForm";
 
 export const BudgetDashboard = () => {
@@ -19,16 +21,9 @@ export const BudgetDashboard = () => {
     () => buildBudgetProjection(plannerState),
     [plannerState],
   );
-  const disposableTotal = projection.coefficients.reduce(
-    (total, coefficient) => total + coefficient.disposableIncome,
-    0,
-  );
-  const plannedSharedTotal =
-    projection.mandatorySharedTotal +
-    projection.funds.reduce((total, fund) => total + fund.monthlyLimit, 0) +
-    projection.goals.reduce((total, goal) => total + goal.monthlyTarget, 0);
+  const disposableTotal = projection.disposableTotal;
   const freedomScore = disposableTotal
-    ? Math.max(0, 1 - plannedSharedTotal / disposableTotal)
+    ? projection.flexiblePool / disposableTotal
     : 0;
 
   return (
@@ -36,7 +31,9 @@ export const BudgetDashboard = () => {
       <section className="ios-panel scroll-fade-in overflow-hidden p-4">
         <div className="flex items-start justify-between gap-3">
           <div>
-            <p className="text-sm text-slate-500">Май 2026</p>
+            <p className="text-sm text-slate-500">
+              {formatMonthLabel(plannerState.planningMonth)}
+            </p>
             <h2 className="mt-1 text-4xl font-semibold leading-tight">
               {formatMoney(disposableTotal)}
             </h2>
@@ -51,7 +48,7 @@ export const BudgetDashboard = () => {
             value={`${Math.round(freedomScore * 100)}%`}
           />
         </div>
-        <div className="mt-4 grid grid-cols-2 gap-2">
+        <div className="mt-4 grid grid-cols-[repeat(2,minmax(0,1fr))] gap-2">
           <div className="rounded-[8px] bg-slate-100/80 p-3">
             <p className="text-sm text-slate-500">Доходы</p>
             <p className="mt-1 text-xl font-semibold">
@@ -87,18 +84,13 @@ export const BudgetDashboard = () => {
         </button>
       </section>
 
-      <IncomePlanner />
       <QuickExpenseForm />
-      <MandatoryPaymentsPanel />
+      <BudgetRecommendationPanel projection={projection} />
       <CoefficientCard coefficients={projection.coefficients} />
       <CashflowAlertList requirements={projection.reserveRequirements} />
       <AllocationList
-        allocations={projection.fundAllocations}
-        title="План фондов по коэффициенту"
-      />
-      <AllocationList
         allocations={projection.goalAllocations}
-        title="План накоплений по коэффициенту"
+        title="Цели по коэффициенту"
       />
     </div>
   );
