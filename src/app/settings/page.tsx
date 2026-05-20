@@ -1,30 +1,15 @@
 import type { Metadata } from "next";
 import { AppShell } from "@/components/app-shell/AppShell";
-import { IncomePlanner } from "@/components/budget/IncomePlanner";
-import { MandatoryPaymentsPanel } from "@/components/budget/MandatoryPaymentsPanel";
-import { HouseholdSettingsPanel } from "@/components/household/HouseholdSettingsPanel";
-import { InvitePartnerCard } from "@/components/household/InvitePartnerCard";
+import { BudgetDashboard } from "@/components/budget/BudgetDashboard";
 
 export const metadata: Metadata = {
-  title: "Настройки",
+  title: "План",
 };
 
 export default function SettingsPage() {
   return (
-    <AppShell eyebrow="Семья" title="Настройки">
-      <div className="grid gap-3">
-        <HouseholdSettingsPanel />
-        <IncomePlanner />
-        <MandatoryPaymentsPanel />
-        <InvitePartnerCard />
-        <section className="ios-panel scroll-fade-in p-4">
-          <h2 className="text-lg font-semibold">Правило расчета</h2>
-          <p className="mt-2 text-sm leading-6 text-slate-500">
-            Личные обязательные платежи оплачиваются каждым самостоятельно.
-            Коэффициент для общих фондов и целей считается от остатка после них.
-          </p>
-        </section>
-      </div>
+    <AppShell eyebrow="Настройки расчёта" title="План">
+      <BudgetDashboard initialView="settings" />
     </AppShell>
   );
 }

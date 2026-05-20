@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { AppShell } from "@/components/app-shell/AppShell";
-import { GoalsOverview } from "@/components/goals/GoalsOverview";
+import { BudgetDashboard } from "@/components/budget/BudgetDashboard";
 
 export const metadata: Metadata = {
   title: "Цели",
@@ -9,7 +9,7 @@ export const metadata: Metadata = {
 export default function GoalsPage() {
   return (
     <AppShell eyebrow="Накопления" title="Цели">
-      <GoalsOverview />
+      <BudgetDashboard initialView="goals" />
     </AppShell>
   );
 }

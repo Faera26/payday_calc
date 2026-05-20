@@ -10,7 +10,7 @@ export const metadata: Metadata = {
     title: "Бюджет",
   },
   applicationName: "Семейный бюджет",
-  description: "PWA для честного семейного бюджета и календарного cashflow.",
+  description: "PWA для расходов, доходов, обязательных платежей и cashflow.",
   icons: {
     apple: "/icons/apple-touch-icon.png",
     icon: "/icons/icon-192.png",
@@ -25,7 +25,7 @@ export const metadata: Metadata = {
 export const viewport: Viewport = {
   initialScale: 1,
   maximumScale: 1,
-  themeColor: "#f4f5f7",
+  themeColor: "#f8fafc",
   userScalable: false,
   viewportFit: "cover",
   width: "device-width",

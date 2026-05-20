@@ -4,7 +4,7 @@ export const defaultBudgetState: BudgetPlannerState = {
   planningMonth: "2026-05",
   members: [
     { id: "primary", name: "Илья" },
-    { id: "partner", name: "Супруга" },
+    { id: "partner", name: "Партнёр" },
   ],
   incomeSchedules: [
     {
@@ -30,7 +30,7 @@ export const defaultBudgetState: BudgetPlannerState = {
     {
       id: "partner-advance",
       memberId: "partner",
-      title: "Аванс супруги",
+      title: "Аванс партнёра",
       kind: "advance",
       amount: 62_000,
       dayOfMonth: 25,
@@ -40,7 +40,7 @@ export const defaultBudgetState: BudgetPlannerState = {
     {
       id: "partner-salary",
       memberId: "partner",
-      title: "Зарплата супруги",
+      title: "Зарплата партнёра",
       kind: "salary",
       amount: 93_000,
       dayOfMonth: 10,
@@ -54,7 +54,7 @@ export const defaultBudgetState: BudgetPlannerState = {
       id: "mortgage",
       memberId: "primary",
       title: "Ипотека",
-      category: "Жилье",
+      category: "Жильё",
       amount: 78_000,
       dueAt: "2026-05-15T10:00:00+03:00",
       scope: "personal",
@@ -91,12 +91,12 @@ export const defaultBudgetState: BudgetPlannerState = {
       title: "Продукты",
       monthlyLimit: 78_000,
       allocationWeight: 5,
-      accent: "#111827",
+      accent: "#0f766e",
       iconKey: "cart",
     },
     {
-      id: "car",
-      title: "Авто",
+      id: "transport",
+      title: "Транспорт",
       monthlyLimit: 34_000,
       allocationWeight: 2,
       accent: "#2563eb",
@@ -109,6 +109,14 @@ export const defaultBudgetState: BudgetPlannerState = {
       allocationWeight: 2,
       accent: "#c2410c",
       iconKey: "game",
+    },
+    {
+      id: "home",
+      title: "Дом",
+      monthlyLimit: 22_000,
+      allocationWeight: 1,
+      accent: "#7c3aed",
+      iconKey: "tools",
     },
   ],
   goals: [
@@ -134,7 +142,7 @@ export const defaultBudgetState: BudgetPlannerState = {
   transactions: [
     {
       id: "groceries-may-1",
-      title: "Перекресток",
+      title: "Перекрёсток",
       amount: 12_400,
       occurredAt: "2026-05-06T18:30:00+03:00",
       kind: "fund",
@@ -142,13 +150,13 @@ export const defaultBudgetState: BudgetPlannerState = {
       categoryId: "groceries",
     },
     {
-      id: "car-fuel-may",
+      id: "transport-fuel-may",
       title: "Бензин",
       amount: 6_200,
       occurredAt: "2026-05-09T11:20:00+03:00",
       kind: "fund",
       scope: "shared",
-      categoryId: "car",
+      categoryId: "transport",
     },
   ],
 };

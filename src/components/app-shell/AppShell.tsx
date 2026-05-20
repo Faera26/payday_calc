@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import { MobileNav } from "@/components/navigation/MobileNav";
+import { DesktopNav, MobileNav } from "@/components/navigation/MobileNav";
 
 type AppShellProps = {
   children: ReactNode;
@@ -8,17 +8,26 @@ type AppShellProps = {
 };
 
 export const AppShell = ({ children, eyebrow, title }: AppShellProps) => (
-  <main className="safe-screen">
-    <div className="mx-auto flex w-full max-w-md min-w-0 flex-col gap-5 px-4 py-5">
-      <header className="scroll-fade-in">
-        {eyebrow ? (
-          <p className="mb-2 text-[11px] font-semibold uppercase text-slate-400">
-            {eyebrow}
-          </p>
-        ) : null}
-        <h1 className="text-3xl font-semibold text-slate-950">{title}</h1>
-      </header>
-      {children}
+  <main className="min-h-dvh bg-slate-50 text-slate-950">
+    <div className="flex min-h-dvh">
+      <DesktopNav />
+      <div className="min-w-0 flex-1 pb-[calc(88px+env(safe-area-inset-bottom))] lg:pb-0">
+        <div className="mx-auto w-full max-w-7xl px-3 py-4 sm:px-5 lg:px-8 lg:py-6">
+          <header className="mb-4 flex items-end justify-between gap-3 lg:mb-6">
+            <div className="min-w-0">
+              {eyebrow ? (
+                <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+                  {eyebrow}
+                </p>
+              ) : null}
+              <h1 className="mt-1 truncate text-2xl font-semibold text-slate-950 sm:text-3xl">
+                {title}
+              </h1>
+            </div>
+          </header>
+          {children}
+        </div>
+      </div>
     </div>
     <MobileNav />
   </main>

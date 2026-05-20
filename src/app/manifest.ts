@@ -2,9 +2,10 @@ import type { MetadataRoute } from "next";
 
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    background_color: "#f4f5f7",
+    background_color: "#f8fafc",
     categories: ["finance", "productivity"],
-    description: "Семейный бюджет с честным коэффициентом и календарем платежей.",
+    description:
+      "Семейный бюджет с расходами, доходами, фондами и календарём платежей.",
     display: "standalone",
     icons: [
       {
@@ -27,6 +28,6 @@ export default function manifest(): MetadataRoute.Manifest {
     scope: "/",
     short_name: "Бюджет",
     start_url: "/dashboard",
-    theme_color: "#f4f5f7",
+    theme_color: "#f8fafc",
   };
 }

@@ -1,5 +1,6 @@
 import {
   AirplaneTilt,
+  Bank,
   Car,
   Coffee,
   FilmSlate,
@@ -8,7 +9,6 @@ import {
   Gift,
   House,
   Lightning,
-  Bank,
   ShoppingCartSimple,
   TShirt,
   Wrench,

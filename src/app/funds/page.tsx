@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { AppShell } from "@/components/app-shell/AppShell";
-import { FundsOverview } from "@/components/funds/FundsOverview";
+import { BudgetDashboard } from "@/components/budget/BudgetDashboard";
 
 export const metadata: Metadata = {
   title: "Фонды",
@@ -8,8 +8,8 @@ export const metadata: Metadata = {
 
 export default function FundsPage() {
   return (
-    <AppShell eyebrow="Лимиты" title="Фонды">
-      <FundsOverview />
+    <AppShell eyebrow="Категории расходов" title="Фонды">
+      <BudgetDashboard initialView="funds" />
     </AppShell>
   );
 }

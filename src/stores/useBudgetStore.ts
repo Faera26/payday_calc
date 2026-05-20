@@ -20,6 +20,11 @@ type BudgetStore = BudgetPlannerState & {
   addIncomeEvent: (event: Omit<IncomeEventPlan, "id">) => void;
   addMandatoryPayment: (payment: Omit<MandatoryPaymentPlan, "id">) => void;
   addTransaction: (transaction: Omit<ExpenseTransaction, "id">) => void;
+  deleteFund: (fundId: string) => void;
+  deleteGoal: (goalId: string) => void;
+  deleteIncomeEvent: (eventId: string) => void;
+  deleteMandatoryPayment: (paymentId: string) => void;
+  deleteTransaction: (transactionId: string) => void;
   resetDemoData: () => void;
   updateFundLimit: (fundId: string, monthlyLimit: number) => void;
   updateFundMeta: (
@@ -40,6 +45,10 @@ type BudgetStore = BudgetPlannerState & {
     patch: Partial<Omit<MandatoryPaymentPlan, "id">>,
   ) => void;
   updateMemberName: (memberId: MemberId, name: string) => void;
+  updateTransaction: (
+    transactionId: string,
+    patch: Partial<Omit<ExpenseTransaction, "id">>,
+  ) => void;
 };
 
 const createId = (prefix: string) => `${prefix}-${crypto.randomUUID()}`;
@@ -76,6 +85,40 @@ export const useBudgetStore = create<BudgetStore>()(
             ...state.transactions,
             { ...transaction, id: createId("transaction") },
           ],
+        })),
+      deleteFund: (fundId) =>
+        set((state) => ({
+          funds: state.funds.filter((fund) => fund.id !== fundId),
+          transactions: state.transactions.map((transaction) =>
+            transaction.categoryId === fundId
+              ? { ...transaction, categoryId: undefined, kind: "other" }
+              : transaction,
+          ),
+        })),
+      deleteGoal: (goalId) =>
+        set((state) => ({
+          goals: state.goals.filter((goal) => goal.id !== goalId),
+          transactions: state.transactions.map((transaction) =>
+            transaction.categoryId === goalId
+              ? { ...transaction, categoryId: undefined, kind: "other" }
+              : transaction,
+          ),
+        })),
+      deleteIncomeEvent: (eventId) =>
+        set((state) => ({
+          incomeEvents: state.incomeEvents.filter((event) => event.id !== eventId),
+        })),
+      deleteMandatoryPayment: (paymentId) =>
+        set((state) => ({
+          mandatoryPayments: state.mandatoryPayments.filter(
+            (payment) => payment.id !== paymentId,
+          ),
+        })),
+      deleteTransaction: (transactionId) =>
+        set((state) => ({
+          transactions: state.transactions.filter(
+            (transaction) => transaction.id !== transactionId,
+          ),
         })),
       resetDemoData: () => set(defaultBudgetState),
       updateFundLimit: (fundId, monthlyLimit) =>
@@ -120,9 +163,17 @@ export const useBudgetStore = create<BudgetStore>()(
             member.id === memberId ? { ...member, name } : member,
           ),
         })),
+      updateTransaction: (transactionId, patch) =>
+        set((state) => ({
+          transactions: state.transactions.map((transaction) =>
+            transaction.id === transactionId
+              ? { ...transaction, ...patch }
+              : transaction,
+          ),
+        })),
     }),
     {
-      name: "family-budget-planner-v2",
+      name: "family-budget-planner-v3",
       partialize: ({
         funds,
         goals,

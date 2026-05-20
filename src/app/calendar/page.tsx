@@ -1,15 +1,15 @@
 import type { Metadata } from "next";
 import { AppShell } from "@/components/app-shell/AppShell";
-import { CashflowTimeline } from "@/components/calendar/CashflowTimeline";
+import { BudgetDashboard } from "@/components/budget/BudgetDashboard";
 
 export const metadata: Metadata = {
-  title: "Календарь",
+  title: "Операции",
 };
 
 export default function CalendarPage() {
   return (
-    <AppShell eyebrow="Cashflow" title="Календарь">
-      <CashflowTimeline />
+    <AppShell eyebrow="Записи" title="Операции">
+      <BudgetDashboard initialView="records" />
     </AppShell>
   );
 }

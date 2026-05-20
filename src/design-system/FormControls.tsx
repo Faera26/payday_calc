@@ -83,7 +83,7 @@ export const PrimaryButton = ({
   ...props
 }: PrimaryButtonProps) => (
   <button
-    className="flex h-12 items-center justify-center rounded-full bg-slate-950 px-5 text-sm font-semibold text-white premium-motion active:scale-[0.98]"
+    className="flex h-12 items-center justify-center rounded-[8px] bg-slate-950 px-5 text-sm font-semibold text-white premium-motion active:scale-[0.98]"
     type={type}
     {...props}
   >
